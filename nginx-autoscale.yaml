@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.19
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"  # Request 100 millicores (0.1 vCPU)
+          limits:
+            cpu: "500m"  # Limit to 500 millicores (0.5 vCPU)
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30005
+  type: NodePort
+
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-deployment
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 50  # Target 50% CPU utilization
+
+
+# Start Minikube Addons
+
+# minikube addons enable metrics-server
+
+# Start Metrics-server on Kubernetes 
+
+# kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+# Start the nginx deployment 
+
+# Then Run busybox and hey command to induce load 
+
+# kubectl run -it --rm load-generator --image=busybox -- /bin/sh -c "while true; do wget -q -O- http://<Minikube IP>:<Node Port>; done"
+
+# hey -z 1m -c 500 http://<Minikube IP>:<Node Port>
