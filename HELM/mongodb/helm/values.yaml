@@ -1,0 +1,9 @@
+image:
+  repository: mongo
+  tag: latest
+mongodbRootPassword: example
+mongodbRootUsername: root
+replicaCount: 1
+service:
+  port: 27017
+  type: ClusterIP
